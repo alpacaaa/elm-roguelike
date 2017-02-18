@@ -110,12 +110,12 @@ layerItems { clock, player } =
     in
         div [ class "layer" ]
             [ emptyTile
-            , emptyTile
+            , tile <| "Enemy02Idle/0" ++ (toString value) ++ ".png"
             , emptyTile
             , row
             , emptyTile
             , tile <| "PlayerIdle/0" ++ (toString value) ++ ".png"
-            , emptyTile
+            , tile <| "Enemy01Idle/0" ++ (toString value) ++ ".png"
             , row
             , emptyTile
             , emptyTile
