@@ -213,7 +213,7 @@ row =
 
 render : Model -> Html Msg
 render model =
-    div [ class "grid" ]
+    div [ class "bigger grid" ]
         [ layerFloor
         , layerItems model
         ]
