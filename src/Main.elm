@@ -19,6 +19,21 @@ type Msg
     | Frame Time
 
 
+type Facing
+    = Right
+    | Left
+
+
+type TileType
+    = Player
+    | Enemy1
+    | Enemy2
+
+
+type Tile
+    = Tile { type_ : TileType, defaultFace : Facing }
+
+
 main : Program Never Model Msg
 main =
     Html.program { view = view, init = init, update = update, subscriptions = subscriptions }
@@ -71,16 +86,85 @@ update msg model =
             model ! []
 
 
-tile : String -> Html Msg
-tile path =
+tile : Tile -> Int -> Html Msg
+tile (Tile { type_ }) step =
+    let
+        path =
+            tilePath type_ step
+
+        sprite =
+            "http://localhost:8001/src/sprites/" ++ path
+
+        facing =
+            Right
+
+        styles =
+            style
+                [ ( "background-image", "url('" ++ sprite ++ "')" )
+                , ( "transform", tileTransform facing )
+                ]
+    in
+        div [ class "tile", styles ] []
+
+
+tileRaw : String -> List ( String, String ) -> Html Msg
+tileRaw path attributes =
     let
         sprite =
             "http://localhost:8001/src/sprites/" ++ path
 
         styles =
-            style [ ( "background-image", "url('" ++ sprite ++ "')" ) ]
+            style <|
+                [ ( "background-image", "url('" ++ sprite ++ "')" )
+                ]
+                    ++ attributes
     in
         div [ class "tile", styles ] []
+
+
+player : Tile
+player =
+    Tile { type_ = Player, defaultFace = Left }
+
+
+enemy1 : Tile
+enemy1 =
+    Tile { type_ = Enemy1, defaultFace = Right }
+
+
+enemy2 : Tile
+enemy2 =
+    Tile { type_ = Enemy2, defaultFace = Right }
+
+
+tileTransform facing =
+    let
+        scaleX =
+            case facing of
+                Right ->
+                    1
+
+                Left ->
+                    -1
+    in
+        "scaleX(" ++ (toString scaleX) ++ ")"
+
+
+tilePath : TileType -> Int -> String
+tilePath type_ step =
+    let
+        folder =
+            case type_ of
+                Player ->
+                    "PlayerIdle"
+
+                Enemy1 ->
+                    "Enemy01Idle"
+
+                Enemy2 ->
+                    "Enemy02Idle"
+    in
+        folder ++ "/0" ++ (toString step) ++ ".png"
 
 
 emptyTile =
@@ -89,33 +173,33 @@ emptyTile =
 
 layerFloor =
     div [ class "layer" ]
-        [ tile "TileSet/floor01.png"
-        , tile "TileSet/obstacle02.png"
-        , tile "TileSet/floor01.png"
+        [ tileRaw "TileSet/floor01.png" []
+        , tileRaw "TileSet/obstacle02.png" []
+        , tileRaw "TileSet/floor01.png" []
         , row
-        , tile "TileSet/obstacle03.png"
-        , tile "TileSet/floor01.png"
-        , tile "TileSet/obstacle03.png"
+        , tileRaw "TileSet/obstacle03.png" []
+        , tileRaw "TileSet/floor01.png" []
+        , tileRaw "TileSet/obstacle03.png" []
         , row
-        , tile "TileSet/floor01.png"
-        , tile "TileSet/obstacle02.png"
-        , tile "TileSet/floor01.png"
+        , tileRaw "TileSet/floor01.png" []
+        , tileRaw "TileSet/obstacle02.png" []
+        , tileRaw "TileSet/floor01.png" []
         ]
 
 
-layerItems { clock, player } =
+layerItems model =
     let
         value =
-            round <| animate clock player
+            round <| animate model.clock model.player
     in
         div [ class "layer" ]
             [ emptyTile
-            , tile <| "Enemy02Idle/0" ++ (toString value) ++ ".png"
+            , tile enemy2 value
             , emptyTile
             , row
             , emptyTile
-            , tile <| "PlayerIdle/0" ++ (toString value) ++ ".png"
-            , tile <| "Enemy01Idle/0" ++ (toString value) ++ ".png"
+            , tile player value
+            , tile enemy1 value
             , row
             , emptyTile
             , emptyTile
