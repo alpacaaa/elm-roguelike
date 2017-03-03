@@ -6,17 +6,21 @@ import AnimationFrame
 import Time exposing (Time)
 import Animation exposing (..)
 import Ease
+import Task
+import BoardManager
 
 
 type alias Model =
     { clock : Time
     , player : Animation
+    , board : BoardManager.Board
     }
 
 
 type Msg
     = NoOp
     | Frame Time
+    | BoardGenerated BoardManager.Board
 
 
 type Facing
@@ -41,7 +45,8 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    { clock = 0, player = playerAnimation } ! []
+    { clock = 0, player = playerAnimation, board = BoardManager.emptyBoard }
+        ! [ Task.perform BoardGenerated BoardManager.createScene ]
 
 
 subscriptions : Model -> Sub Msg
@@ -73,7 +78,7 @@ handleFrame model t =
             else
                 model.player
     in
-        { clock = clock, player = player } ! []
+        { model | clock = clock, player = player } ! []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -81,6 +86,9 @@ update msg model =
     case msg of
         Frame t ->
             handleFrame model t
+
+        BoardGenerated board ->
+            { model | board = board } ! []
 
         NoOp ->
             model ! []
